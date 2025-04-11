@@ -100,6 +100,7 @@ module.exports.loginPost = async (req, res , next) => {
             "password.special": "Mật khẩu phải chứa ít nhất một ký tự đặc biệt!"
 
         }),
+        rememberPassword: Joi.boolean()
     });
 
     const { error } = schema.validate(req.body);

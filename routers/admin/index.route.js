@@ -12,6 +12,11 @@ const profileRoute = require('./profile.route');
 const authMiddleware = require('../../middlewares/admin/auth.middleware')
 
 
+Route.use((req,res,next) => {
+    res.setHeader('Cache-Control', 'no-store')
+    next();
+})
+
 Route.use("/account", accountRoute);
 Route.use("/dashboard", authMiddleware.verifyToken, dashBoardRoute);
 Route.use("/category", authMiddleware.verifyToken, categoryRoute);

@@ -48,7 +48,8 @@ if(loginForm) {
 
     const dataFinal = {
       email: email,
-      password: password
+      password: password,
+      rememberPassword: rememberPassword,
     };
     fetch(`/${pathadmin}/account/login`, {
       method:"POST",
@@ -187,7 +188,30 @@ if(forgotPasswordForm) {
     ])
     .onSuccess((event) => {
       const email = event.target.email.value;
-      console.log(email);
+      const dataFinal = {
+        email: email,
+      };
+
+      fetch(`/${pathadmin}/account/forgot-password`,{
+        method: "POST",
+        headers: {
+          "COntent-Type" : "application/json"
+        },
+        body: JSON.stringify(dataFinal),
+      })
+
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error"){
+            alert(data.message);
+          }
+
+          if(data.code == "success") {
+            window.location.href=`/${pathadmin}/account/otp-password?email=${email}`
+          }
+        })
+
+
     })
   ;
 }
@@ -207,7 +231,33 @@ if(otpPasswordForm) {
     ])
     .onSuccess((event) => {
       const otp = event.target.otp.value;
-      console.log(otp);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const email = urlParams.get("email");
+
+      const dataFinal = {
+        otp: otp,
+        email: email
+      }
+
+      fetch(`/${pathadmin}/account/otp-password`,{
+        method: "POST",
+        headers: {
+          "Content-Type" : "application/json"
+        },
+        body: JSON.stringify(dataFinal),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error"){
+            alert(data.message);
+          }
+
+          if(data.code == "success") {
+            window.location.href=`/${pathadmin}/account/reset-password`;
+          }
+        })
+
     })
   ;
 }
