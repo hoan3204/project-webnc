@@ -24,7 +24,9 @@ try {
         res.redirect(`/${pathadmin}/account/login`);
         return;
     }
-
+    req.account = existAccount;
+    
+    res.locals.account = existAccount;
 
     next();
 } catch (error) {

@@ -232,6 +232,25 @@ module.exports.resetPassword = async (req,res) => {
         pageTitle:"Đổi mật khẩu"
     })
 }
+module.exports.resetPasswordPost = async (req,res) => {
+    const { password } = req.body;
+
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(password, salt);
+
+    await AccountAdmin.updateOne({
+        _id: req.account.id,
+        delete: false,
+        status: "active",
+    },{
+        password: hashPassword
+    })
+
+    res.json({
+        code: "success",
+        message:"Đổi mật khẩu thành công!"
+    })
+}
 
 module.exports.logoutPOST = async (req,res) => {
     res.clearCookie("token");
