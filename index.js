@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser');
 
 
 const app = express()
-const port = 3001
+const port = 3000
 
 database.connect();
 
