@@ -2,35 +2,44 @@ extends ../layouts/default.pug
 include ../mixins/options.pug
 
 block main
-  h1.box-title Tạo danh mục
+  h1.box-title Chỉnh sửa danh mục
 
   .section-8
-    form#category-create-form
+    form#category-edit-form
+      .inner-group(style="display: none;")
+        label(class="inner-label" for="id") Id
+        input(type="text" id="id" name="id" value=categoryDetail.id)
       .inner-group
         label(class="inner-label" for="name") Tên danh mục
-        input(type="text" id="name" name="name")
+        input(type="text" id="name" name="name" value=categoryDetail.name)
       .inner-group
         label(class="inner-label" for="parent") Danh mục cha
         select(id="parent" name="parent")
           option(value="") -- Chọn danh mục --
-          +options(categoryList, 0)
+          +options(categoryList, 0, categoryDetail.parent)
           
       .inner-group
         label(class="inner-label" for="position") Vị trí
-        input(type="number" id="position" name="position")
+        input(type="number" id="position" name="position" value=categoryDetail.position)
       .inner-group
         label(class="inner-label" for="status") Trạng thái
         select(id="status" name="status")
-          option(value="active") Hoạt động
-          option(value="inactive") Dừng hoạt động
+          option(
+            value="active"
+            selected=(categoryDetail.status == "active" ? true : false)
+        ) Hoạt động
+          option(
+            value="inactive"
+            selected=(categoryDetail.status == "inactive" ? true : false)
+        ) Dừng hoạt động
       .inner-group.inner-two-col
         label(class="inner-label" for="avatar") Ảnh đại diện
-        div(class="inner-upload-image")
+        div(class="inner-upload-image" image-default=categoryDetail.avatar)
           input(type="file" id="avatar" accept="image/*" filepond-image name="avatar")
       .inner-group.inner-two-col
-        label(class="inner-label" for="description") Mô tả
+        label(class="inner-label" for="description") #{categoryDetail.description}
         textarea(id="description" textarea-mce name="description")
       .inner-button.inner-two-col
-        button Tạo mới
+        button Cập Nhật
     .inner-back
       a(href=`/${pathadmin}/category/list`) Quay lại danh sách

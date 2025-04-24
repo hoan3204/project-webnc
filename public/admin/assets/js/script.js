@@ -83,8 +83,23 @@ if(listFilepondImage.length > 0) {
   listFilepondImage.forEach(filepondImage => {
     FilePond.registerPlugin(FilePondPluginImagePreview);
     FilePond.registerPlugin(FilePondPluginFileValidateType);
+
+    let files = null;
+    const elementImageDefault = filepondImage.closest("[image-default]");
+    if(elementImageDefault) {
+      const imageDefault = elementImageDefault.getAttribute("image-default");
+      if(imageDefault) {
+        files = [
+          {
+            source: imageDefault, // Đường dẫn ảnh
+          },
+        ]
+      }
+    }
+
     filePond[filepondImage.name] = FilePond.create(filepondImage, {
-      labelIdle: '+'
+      labelIdle: '+',
+      files: files
     });
   });
 }
@@ -187,6 +202,64 @@ if(categoryCreateForm) {
   ;
 }
 // End Category Create Form
+
+// Category Edit Form
+const categoryEditForm = document.querySelector("#category-edit-form");
+if(categoryEditForm) {
+  const validation = new JustValidate('#category-edit-form');
+
+  validation
+    .addField('#name', [
+      {
+        rule: 'required',
+        errorMessage: 'Vui lòng nhập tên danh mục!'
+      }
+    ])
+    .onSuccess((event) => {
+      const id = event.target.id.value;
+      const name = event.target.name.value;
+      const parent = event.target.parent.value;
+      const position = event.target.position.value;
+      const status = event.target.status.value;
+      const avatars = filePond.avatar.getFiles();
+      let avatar = null;
+      if(avatars.length > 0) {
+        avatar = avatars[0].file;
+        const elementImageDefault = event.target.avatar.closest("[image-default]");
+        const imageDefault = elementImageDefault.getAttribute("image-default");
+        if(imageDefault.includes(avatar.name)) {
+          avatar = null;
+        }
+      }
+      const description = tinymce.get("description").getContent();
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("parent", parent);
+      formData.append("position", position);
+      formData.append("status", status);
+      formData.append("avatar", avatar);
+      formData.append("description", description);
+      
+      fetch(`/${pathadmin}/category/edit/${id}`, {
+        method: "PATCH",
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error") {
+            alert(data.message);
+          }
+
+          if(data.code == "success") {
+            window.location.reload();
+          }
+        })
+    })
+  ;
+}
+// End Category Edit Form
 
 // Tour Create Form
 const tourCreateForm = document.querySelector("#tour-create-form");
@@ -656,3 +729,253 @@ if(buttonLogout) {
 }
 
 //end logout
+
+/* alert */
+const alertTime = document.querySelector("[alert-time]");
+if (alertTime) {
+  let time = alertTime.getAttribute("alert-time");
+  time = time ? parseInt(time) : 4000;
+  setTimeout(() => {
+    alertTime.remove(); //xoa khoi giao dien
+  }, time);
+}
+/* end alert */
+
+/* button delete */
+const listButtonDelete = document.querySelectorAll("[button-delete]");
+if(listButtonDelete.length > 0) {
+  listButtonDelete.forEach(button => {
+    button.addEventListener("click", () => {
+      const dataApi = button.getAttribute("data-api");
+      
+      fetch(dataApi, {
+        method: "PATCH",
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.code == "error"){
+            alert(data.message);
+          }
+
+          if(data.code == "success") {
+            window.location.reload();
+          }
+        })
+    })
+  })
+}
+/* end button delete */
+
+/* filter status */
+const filterStatus = document.querySelector("[filter-status]")
+if(filterStatus) {
+  const url = new URL(window.location.href);
+//lang nghe thay doi luu chon
+  filterStatus.addEventListener("change", () => {
+    const value = filterStatus.value;
+    if(value) {
+      url.searchParams.set("status", value);
+    } else {
+      url.searchParams.delete("status");
+    }
+
+    window.location.href = url.href;
+  })
+  //hien thi luu chon mac dinh
+  const valueCurrent = url.searchParams.get("status");
+  if (valueCurrent) {
+    filterStatus.value = valueCurrent;
+  }
+}
+/* end filter status */
+
+/* filter created by  */
+const filterCreatedBy = document.querySelector("[filter-created-by]")
+if(filterCreatedBy) {
+  const url = new URL(window.location.href);
+//lang nghe thay doi luu chon
+  filterCreatedBy.addEventListener("change", () => {
+    const value = filterCreatedBy.value;
+    if(value) {
+      url.searchParams.set("createdBy", value);
+    } else {
+      url.searchParams.delete("createdBy");
+    }
+
+    window.location.href = url.href;
+  })
+  //hien thi luu chon mac dinh
+  const valueCurrent = url.searchParams.get("createdBy");
+  if (valueCurrent) {
+    filterCreatedBy.value = valueCurrent;
+  }
+}
+/* end filter created by */
+
+/* filter start date  */
+const filterStartDate = document.querySelector("[filter-start-date]")
+if(filterStartDate) {
+  const url = new URL(window.location.href);
+//lang nghe thay doi luu chon
+  filterStartDate.addEventListener("change", () => {
+    const value = filterStartDate.value;
+    if(value) {
+      url.searchParams.set("startDate", value);
+    } else {
+      url.searchParams.delete("startDate");
+    }
+
+    window.location.href = url.href;
+  })
+  //hien thi luu chon mac dinh
+  const valueCurrent = url.searchParams.get("startDate");
+  if (valueCurrent) {
+    filterStartDate.value = valueCurrent;
+  }
+}
+/* end filter start date */
+
+/* filter end date  */
+const filterEndDate = document.querySelector("[filter-end-date]")
+if(filterEndDate) {
+  const url = new URL(window.location.href);
+//lang nghe thay doi luu chon
+  filterEndDate.addEventListener("change", () => {
+    const value = filterEndDate.value;
+    if(value) {
+      url.searchParams.set("endDate", value);
+    } else {
+      url.searchParams.delete("endDate");
+    }
+
+    window.location.href = url.href;
+  })
+  //hien thi luu chon mac dinh
+  const valueCurrent = url.searchParams.get("endDate");
+  if (valueCurrent) {
+    filterEndDate.value = valueCurrent;
+  }
+}
+/* end filter start date */
+
+//xoa bo loc
+const filterReset = document.querySelector("[filter-reset]")
+if(filterReset) {
+  const url = new URL(window.location.href);
+  filterReset.addEventListener("click",() => {
+    url.search= "";
+
+    window.location.href= url.href;
+  })
+}
+//end xoa bo loc
+
+//check all
+const checkAll = document.querySelector("[check-all]");
+if(checkAll) {
+  checkAll.addEventListener("click", () => {
+    const listCheckItem = document.querySelectorAll("[check-item]");
+    listCheckItem.forEach(item => {
+      item.checked = checkAll.checked;
+    })
+  })
+}
+//end check all
+
+//change multi
+const changeMulti = document.querySelector("[change-multi]")
+if (changeMulti) {
+  const dataApi = changeMulti.getAttribute("data-api");
+  const select = changeMulti.querySelector("select");
+  const button = changeMulti.querySelector("button");
+
+  button.addEventListener("click", () => {
+    const option = select.value;
+    const listInputChecked = document.querySelectorAll("[check-item]:checked")
+    if(option && listInputChecked.length > 0) {
+      const ids = [];
+      listInputChecked.forEach(checkItem => {
+        const id = checkItem.getAttribute("check-item");
+        ids.push(id);
+
+
+
+      })
+      console.log(dataApi)
+      console.log(option)
+      console.log(ids)
+      const dataFinal = {
+        option: option,
+        ids: ids,
+      }
+
+      fetch(dataApi, {
+        method: "PATCH",
+        headers: {
+          "Content-Type" : "application/json"
+        },
+        body:JSON.stringify(dataFinal)
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error") {
+            alert(data.message)
+          }
+
+          if(data.code == "success") {
+            window.location.reload();
+          }
+        })
+    } else {
+
+      alert("Vui lòng chọn option và bản ghi muốn thực hiện!");
+    }
+  })
+}
+//end change multi
+
+//search
+const search = document.querySelector("[search]");
+if(search) {
+  const url = new URL(window.location.href);
+
+  search.addEventListener("keyup", (event) => {
+    if(event.code == "Enter") {
+      const value = search.value;
+      if(value) {
+        url.searchParams.set("keyword", value);
+      } else {
+        url.searchParams.delete("keyword");
+
+      }
+
+      window.location.href = url.href;
+    }
+  })
+}
+//end search
+
+
+
+/* pagination */
+const pagination = document.querySelector("[pagination]")
+if(pagination) {
+  const url = new URL(window.location.href);
+//lang nghe thay doi luu chon
+  pagination.addEventListener("change", () => {
+    const value = pagination.value;
+    if(value) {
+      url.searchParams.set("page", value);
+    } else {
+      url.searchParams.delete("page");
+    }
+
+    window.location.href = url.href;
+  })
+  //hien thi luu chon mac dinh
+  const valueCurrent = url.searchParams.get("page");
+  if (valueCurrent) {
+    pagination.value = valueCurrent;
+  }
+}
+/* end pagination */
