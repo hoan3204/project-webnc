@@ -62,21 +62,22 @@ module.exports.list = async (req,res) => {
     //end tim kiem
 
     //phan trang
-    const limitItem = 3
+    const limitItem = 5
     let page = 1;
     if(req.query.page) {
         const currentPage = parseInt(req.query.page);
         if(currentPage > 0) {
-            page= currentPage;
-        }
+            page = currentPage;
+        } 
     }
     const totalRecord = await Category.countDocuments(find);
     const totalPage = Math.ceil(totalRecord/limitItem);
     if(page > totalPage) {
         page = totalPage
     }
-    const skip = (page - 1) * limitItem;
+    const skip = Math.max(0, (page - 1) * limitItem);
 
+    
     const pagination = {
         skip: skip,
         totalPage: totalPage,
@@ -111,9 +112,8 @@ module.exports.list = async (req,res) => {
         item.updatedAtFormat = moment(item.updatedAt).format("HH:mm - DD/MM/YYYY");
     }
 
-    for ( const item of categoryList) {
-        
-    }
+   
+
     res.render('admin/pages/category-list',{
         pageTitle:"Quản lý danh mục",
         categoryList: categoryList,

@@ -34,11 +34,11 @@ block main
         ) Dừng hoạt động
       .inner-group.inner-two-col
         label(class="inner-label" for="avatar") Ảnh đại diện
-        div(class="inner-upload-image" image-default=categoryDetail.avatar)
+        div(class="inner-upload-image" image-default=(categoryDetail.avatar || ""))
           input(type="file" id="avatar" accept="image/*" filepond-image name="avatar")
       .inner-group.inner-two-col
-        label(class="inner-label" for="description") #{categoryDetail.description}
-        textarea(id="description" textarea-mce name="description")
+        label(class="inner-label" for="description") 
+        textarea(id="description" textarea-mce name="description") #{categoryDetail.description}
       .inner-button.inner-two-col
         button Cập Nhật
     .inner-back

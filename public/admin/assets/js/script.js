@@ -253,7 +253,7 @@ if(categoryEditForm) {
           }
 
           if(data.code == "success") {
-            window.location.reload();
+            window.location.href=`/${pathadmin}/category/list`;
           }
         })
     })
@@ -323,30 +323,174 @@ if(tourCreateForm) {
       });
       // End schedules
       
-      console.log(name);
-      console.log(category);
-      console.log(position);
-      console.log(status);
-      console.log(avatar);
-      console.log(priceAdult);
-      console.log(priceChildren);
-      console.log(priceBaby);
-      console.log(priceNewAdult);
-      console.log(priceNewChildren);
-      console.log(priceNewBaby);
-      console.log(stockAdult);
-      console.log(stockChildren);
-      console.log(stockBaby);
-      console.log(locations);
-      console.log(time);
-      console.log(vehicle);
-      console.log(departureDate);
-      console.log(information);
-      console.log(schedules);
+      //tao form data
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("category", category);
+      formData.append("position", position);
+      formData.append("status", status);
+      formData.append("avatar", avatar);
+      formData.append("priceAdult", priceAdult);
+      formData.append("priceChildren", priceChildren);
+      formData.append("priceBaby", priceBaby);
+      formData.append("priceNewAdult", priceNewAdult);
+      formData.append("priceNewChildren", priceNewChildren);
+      formData.append("priceNewBaby", priceNewBaby);
+      formData.append("stockAdult", stockAdult);
+      formData.append("stockChildren", stockChildren);
+      formData.append("stockBaby", stockBaby);
+      formData.append("locations", JSON.stringify(locations));
+      formData.append("time", time);
+      formData.append("vehicle", vehicle);
+      formData.append("departureDate", departureDate);
+      formData.append("information", information);
+      formData.append("schedules", JSON.stringify(schedules));
+
+            // images
+      if(filePondMulti.images.getFiles().length > 0) {
+        filePondMulti.images.getFiles().forEach(item => {
+          formData.append("images", item.file);
+        })
+      }
+      // End images
+
+      fetch(`/${pathadmin}/tour/create`, {
+        method:"POST",
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.code == "error") {
+            alert(data.message);
+          }
+
+          if (data.code == "success") {
+           
+            window.location.href = `/${pathadmin}/tour/list`;
+          }
+        })
     })
   ;
 }
 // End Tour Create Form
+
+// Tour Edit Form
+const tourEditForm = document.querySelector("#tour-edit-form");
+if(tourEditForm) {
+  const validation = new JustValidate('#tour-edit-form');
+
+  validation
+    .addField('#name', [
+      {
+        rule: 'required',
+        errorMessage: 'Vui lòng nhập tên tour!'
+      }
+    ])
+    .onSuccess((event) => {
+      const id = event.target.id.value;
+      const name = event.target.name.value;
+      const category = event.target.category.value;
+      const position = event.target.position.value;
+      const status = event.target.status.value;
+      const avatars = filePond.avatar.getFiles();
+      let avatar = null;
+      if(avatars.length > 0) {
+        avatar = avatars[0].file;
+        const elementImageDefault = event.target.avatar.closest("[image-default]");
+        const imageDefault = elementImageDefault.getAttribute("image-default");
+        if(imageDefault.includes(avatar.name)) {
+          avatar = null;
+        }
+      }
+      const priceAdult = event.target.priceAdult.value;
+      const priceChildren = event.target.priceChildren.value;
+      const priceBaby = event.target.priceBaby.value;
+      const priceNewAdult = event.target.priceNewAdult.value;
+      const priceNewChildren = event.target.priceNewChildren.value;
+      const priceNewBaby = event.target.priceNewBaby.value;
+      const stockAdult = event.target.stockAdult.value;
+      const stockChildren = event.target.stockChildren.value;
+      const stockBaby = event.target.stockBaby.value;
+      const locations = [];
+      const time = event.target.time.value;
+      const vehicle = event.target.vehicle.value;
+      const departureDate = event.target.departureDate.value;
+      const information = tinymce.get("information").getContent();
+      const schedules = [];
+
+      // locations
+      const listElementLocation = tourEditForm.querySelectorAll('input[name="locations"]:checked');
+      listElementLocation.forEach(input => {
+        locations.push(input.value);
+      });
+      // End locations
+
+      // schedules
+      const listElementScheduleItem = tourEditForm.querySelectorAll('.inner-schedule-item');
+      listElementScheduleItem.forEach(scheduleItem => {
+        const input = scheduleItem.querySelector("input");
+        const title = input.value;
+
+        const textarea = scheduleItem.querySelector("textarea");
+        const idTextarea = textarea.id;
+        const description = tinymce.get(idTextarea).getContent();
+
+        schedules.push({
+          title: title,
+          description: description
+        });
+      });
+      // End schedules
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("category", category);
+      formData.append("position", position);
+      formData.append("status", status);
+      formData.append("avatar", avatar);
+      formData.append("priceAdult", priceAdult);
+      formData.append("priceChildren", priceChildren);
+      formData.append("priceBaby", priceBaby);
+      formData.append("priceNewAdult", priceNewAdult);
+      formData.append("priceNewChildren", priceNewChildren);
+      formData.append("priceNewBaby", priceNewBaby);
+      formData.append("stockAdult", stockAdult);
+      formData.append("stockChildren", stockChildren);
+      formData.append("stockBaby", stockBaby);
+      formData.append("locations", JSON.stringify(locations));
+      formData.append("time", time);
+      formData.append("vehicle", vehicle);
+      formData.append("departureDate", departureDate);
+      formData.append("information", information);
+      formData.append("schedules", JSON.stringify(schedules));
+
+            // images
+      if(filePondMulti.images.getFiles().length > 0) {
+        filePondMulti.images.getFiles().forEach(item => {
+          formData.append("images", item.file);
+        })
+      }
+      // End images
+
+      fetch(`/${pathadmin}/tour/edit/${id}`, {
+        method: "PATCH",
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error") {
+            alert(data.message);
+          }
+
+          if(data.code == "success") {
+            window.location.href = `/${pathadmin}/tour/list`;
+          }
+        })
+    })
+  ;
+}
+// End Tour Edit Form
 
 // Order Edit Form
 const orderEditForm = document.querySelector("#order-edit-form");
@@ -427,19 +571,46 @@ if(settingWebsiteInfoForm) {
       let logo = null;
       if(logos.length > 0) {
         logo = logos[0].file;
+        const elementImageDefault = event.target.logo.closest("[image-default]");
+        const imageDefault = elementImageDefault.getAttribute("image-default");
+        if(imageDefault.includes(logo.name)) {
+          logo = null;
+        }
       }
       const favicons = filePond.favicon.getFiles();
       let favicon = null;
       if(favicons.length > 0) {
         favicon = favicons[0].file;
+        const elementImageDefault = event.target.favicon.closest("[image-default]");
+        const imageDefault = elementImageDefault.getAttribute("image-default");
+        if(imageDefault.includes(favicon.name)) {
+          favicon = null;
+        }
       }
 
-      console.log(websiteName);
-      console.log(phone);
-      console.log(email);
-      console.log(address);
-      console.log(logo);
-      console.log(favicon);
+
+     
+      const formData = new FormData();
+      formData.append("websiteName", websiteName);
+      formData.append("phone", phone);
+      formData.append("email", email);
+      formData.append("address", address);
+      formData.append("logo", logo);
+      formData.append("favicon", favicon);
+
+      fetch(`/${pathadmin}/setting/website-info`, {
+        method:"PATCH",
+        body: formData,
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error" ) {
+            alert(data.message);
+          }
+          if(data.code == "success"){
+            window.location.reload();
+          }
+        })
     })
   ;
 }
@@ -533,15 +704,154 @@ if(settingAccountAdminCreateForm) {
       if(avatars.length > 0) {
         avatar = avatars[0].file;
       }
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("fullName", fullName);
+      formData.append("email", email);
+      formData.append("phone", phone);
+      formData.append("role", role);
+      formData.append("positionCompany", positionCompany);
+      formData.append("status", status);
+      formData.append("password", password);
+      formData.append("avatar", avatar);
 
-      console.log(fullName);
-      console.log(email);
-      console.log(phone);
-      console.log(role);
-      console.log(positionCompany);
-      console.log(status);
-      console.log(password);
-      console.log(avatar);
+      fetch(`/${pathadmin}/setting/website-admin/create`, {
+        method:"POST",
+        body:formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error") {
+            alert(data.message);
+          }
+
+          if(data.code == "success"){
+            window.location.href = `/${pathadmin}/setting/website-admin/list`
+          }
+        })
+
+    })
+  ;
+}
+// End Setting Account Admin Create Form
+
+// Setting Account Admin Edit Form
+const settingAccountAdminEditForm = document.querySelector("#setting-account-admin-edit-form");
+if(settingAccountAdminEditForm) {
+  const validation = new JustValidate('#setting-account-admin-edit-form');
+
+  validation
+    .addField('#fullName', [
+      {
+        rule: 'required',
+        errorMessage: 'Vui lòng nhập họ tên!'
+      },
+      {
+        rule: 'minLength',
+        value: 5,
+        errorMessage: 'Họ tên phải có ít nhất 5 ký tự!',
+      },
+      {
+        rule: 'maxLength',
+        value: 50,
+        errorMessage: 'Họ tên không được vượt quá 50 ký tự!',
+      },
+    ])
+    .addField('#email', [
+      {
+        rule: 'required',
+        errorMessage: 'Vui lòng nhập email!'
+      },
+      {
+        rule: 'email',
+        errorMessage: 'Email không đúng định dạng!',
+      },
+    ])
+    .addField('#phone', [
+      {
+        rule: 'customRegexp',
+        value: /(84|0[3|5|7|8|9])+([0-9]{8})\b/g,
+        errorMessage: 'Số điện thoại không đúng định dạng!'
+      },
+    ])
+    .addField('#positionCompany', [
+      {
+        rule: 'required',
+        errorMessage: 'Vui lòng nhập chức vụ!'
+      },
+    ])
+    .addField('#password', [
+      {
+        validator: (value) => value ? value.length >= 8 : true,
+        errorMessage: 'Mật khẩu phải chứa ít nhất 8 ký tự!',
+      },
+      {
+        validator: (value) => value ? /[A-Z]/.test(value) : true,
+        errorMessage: 'Mật khẩu phải chứa ít nhất một chữ cái in hoa!',
+      },
+      {
+        validator: (value) => value ? /[a-z]/.test(value) : true,
+        errorMessage: 'Mật khẩu phải chứa ít nhất một chữ cái thường!',
+      },
+      {
+        validator: (value) => value ? /\d/.test(value) : true,
+        errorMessage: 'Mật khẩu phải chứa ít nhất một chữ số!',
+      },
+      {
+        validator: (value) => value ? /[@$!%*?&]/.test(value) : true,
+        errorMessage: 'Mật khẩu phải chứa ít nhất một ký tự đặc biệt!',
+      },
+    ])
+
+    .onSuccess((event) => {
+      const id = event.target.id.value;
+      const fullName = event.target.fullName.value;
+      const email = event.target.email.value;
+      const phone = event.target.phone.value;
+      const role = event.target.role.value;
+      const positionCompany = event.target.positionCompany.value;
+      const status = event.target.status.value;
+      const password = event.target.password.value;
+      const avatars = filePond.avatar.getFiles();
+      let avatar = null;
+      if(avatars.length > 0) {
+        avatar = avatars[0].file;
+        const elementImageDefault = event.target.avatar.closest("[image-default]");
+        const imageDefault = elementImageDefault.getAttribute("image-default");
+        if(imageDefault.includes(avatar.name)) {
+          avatar = null;
+        }
+      }
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("fullName", fullName);
+      formData.append("email", email);
+      formData.append("phone", phone);
+      formData.append("role", role);
+      formData.append("positionCompany", positionCompany);
+      formData.append("status", status);
+      if(password) {
+        formData.append("password", password);
+      }
+
+      formData.append("avatar", avatar);
+
+      fetch(`/${pathadmin}/setting/website-admin/edit/${id}`, {
+        method:"PATCH",
+        body:formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error") {
+            alert(data.message);
+          }
+
+          if(data.code == "success"){
+            window.location.href = `/${pathadmin}/setting/website-admin/list`
+          }
+        })
+
     })
   ;
 }
@@ -571,13 +881,86 @@ if(settingRoleCreateForm) {
       });
       // End permissions
 
-      console.log(name);
-      console.log(description);
-      console.log(permissions);
+     
+      const dataFinal = {
+        name:name,
+        description: description,
+        permissions: permissions
+      }
+      fetch(`/${pathadmin}/setting/role/create`, {
+        method:"POST",
+        headers: {
+          "Content-Type" : "application/json",
+        }, 
+        body: JSON.stringify(dataFinal),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error"){
+            alert(data.message);
+          }
+
+          if(data.code == "success"){
+            window.location.href = `/${pathadmin}/setting/role/list`
+          }
+        })
     })
   ;
 }
 // End Setting Role Create Form
+
+// Setting Role edit Form
+const settingRoleEditForm = document.querySelector("#setting-role-edit-form");
+if(settingRoleEditForm) {
+  const validation = new JustValidate('#setting-role-edit-form');
+
+  validation
+    .addField('#name', [
+      {
+        rule: 'required',
+        errorMessage: 'Vui lòng nhập tên nhóm quyền!'
+      },
+    ])
+    .onSuccess((event) => {
+      const id = event.target.id.value;
+      const name = event.target.name.value;
+      const description = event.target.description.value;
+      const permissions = [];
+
+      // permissions
+      const listElementPermission = settingRoleEditForm.querySelectorAll('input[name="permissions"]:checked');
+      listElementPermission.forEach(input => {
+        permissions.push(input.value);
+      });
+      // End permissions
+
+     
+      const dataFinal = {
+        name:name,
+        description: description,
+        permissions: permissions
+      }
+      fetch(`/${pathadmin}/setting/role/edit/${id}`, {
+        method:"PATCH",
+        headers: {
+          "Content-Type" : "application/json",
+        }, 
+        body: JSON.stringify(dataFinal),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error"){
+            alert(data.message);
+          }
+
+          if(data.code == "success"){
+            window.location.href = `/${pathadmin}/setting/role/list`
+          }
+        })
+    })
+  ;
+}
+// End Setting Role Edit Form
 
 // Profile Edit Form
 const profileEditForm = document.querySelector("#profile-edit-form");
@@ -630,12 +1013,34 @@ if(profileEditForm) {
       let avatar = null;
       if(avatars.length > 0) {
         avatar = avatars[0].file;
+        const elementImageDefault = event.target.avatar.closest("[image-default]");
+        const imageDefault = elementImageDefault.getAttribute("image-default");
+        if(imageDefault.includes(avatar.name)) {
+          avatar = null;
+        }
       }
 
-      console.log(fullName);
-      console.log(email);
-      console.log(phone);
-      console.log(avatar);
+      const formData = new FormData();
+      formData.append("fullName", fullName);
+      formData.append("email", email);
+      formData.append("phone", phone);
+      formData.append("avatar", avatar);
+
+      fetch(`/${pathadmin}/profile/edit`, {
+        method:"PATCH",
+        body: formData,
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error"){
+            alert(data.message);
+          }
+
+          if(data.code == "success"){
+            window.location.reload();
+          }
+        })
+      
     })
   ;
 }
@@ -688,7 +1093,28 @@ if(profileChangePasswordForm) {
     ])
     .onSuccess((event) => {
       const password = event.target.password.value;
-      console.log(password);
+      
+      const dataFinal = {
+        password: password
+      }
+
+      fetch(`/${pathadmin}/profile/change-password`,{
+        method:"PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataFinal),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error"){
+            alert(data.message);
+          }
+
+          if(data.code == "success"){
+            window.location.reload();
+          }
+        })
     })
   ;
 }
@@ -901,9 +1327,7 @@ if (changeMulti) {
 
 
       })
-      console.log(dataApi)
-      console.log(option)
-      console.log(ids)
+      
       const dataFinal = {
         option: option,
         ids: ids,
@@ -979,3 +1403,58 @@ if(pagination) {
   }
 }
 /* end pagination */
+
+
+/* filter categories  */
+const filtercategories = document.querySelector("[filter-categories]")
+if(filtercategories) {
+  const url = new URL(window.location.href);
+//lang nghe thay doi luu chon
+  filtercategories.addEventListener("change", () => {
+    const value = filtercategories.value;
+    if(value) {
+      url.searchParams.set("categories", value);
+    } else {
+      url.searchParams.delete("categories");
+    }
+
+    window.location.href = url.href;
+  })
+  //hien thi luu chon mac dinh
+  const valueCurrent = url.searchParams.get("categories");
+  if (valueCurrent) {
+    filtercategories.value = valueCurrent;
+  }
+}
+/* end filter categories */
+
+// Filepond Image Multi
+const listFilepondImageMulti = document.querySelectorAll("[filepond-image-multi]");
+let filePondMulti = {};
+if(listFilepondImageMulti.length > 0) {
+  listFilepondImageMulti.forEach(filepondImage => {
+    FilePond.registerPlugin(FilePondPluginImagePreview);
+    FilePond.registerPlugin(FilePondPluginFileValidateType);
+
+    let files = null;
+    const elementListImageDefault = filepondImage.closest("[list-image-default]");
+    if(elementListImageDefault) {
+      let listImageDefault = elementListImageDefault.getAttribute("list-image-default");
+      if(listImageDefault) {
+        listImageDefault = JSON.parse(listImageDefault);
+        files = [];
+        listImageDefault.forEach(image => {
+          files.push({
+            source: image, // Đường dẫn ảnh
+          });
+        })
+      }
+    }
+
+    filePondMulti[filepondImage.name] = FilePond.create(filepondImage, {
+      labelIdle: '+',
+      files: files,
+    });
+  });
+}
+// End Filepond Image Multi
