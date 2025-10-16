@@ -30,6 +30,7 @@ global.pathadmin = variableConfig.pathadmin;
 
 //cho phep gui data len dang json
 app.use(express.json());
+app.use(cookieParser("hoan322004"));
 
 //su dung cookie-parser
 app.use(
