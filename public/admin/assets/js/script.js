@@ -105,53 +105,146 @@ if(listFilepondImage.length > 0) {
 }
 // End Filepond Image
 
+// Filepond Image Multi
+const listFilepondImageMulti = document.querySelectorAll("[filepond-image-multi]");
+let filePondMulti = {};
+if(listFilepondImageMulti.length > 0) {
+  listFilepondImageMulti.forEach(filepondImage => {
+    FilePond.registerPlugin(FilePondPluginImagePreview);
+    FilePond.registerPlugin(FilePondPluginFileValidateType);
+
+    let files = null;
+    const elementListImageDefault = filepondImage.closest("[list-image-default]");
+    if(elementListImageDefault) {
+      let listImageDefault = elementListImageDefault.getAttribute("list-image-default");
+      if(listImageDefault) {
+        listImageDefault = JSON.parse(listImageDefault);
+        files = [];
+        listImageDefault.forEach(image => {
+          files.push({
+            source: image, // Đường dẫn ảnh
+          });
+        })
+      }
+    }
+
+    filePondMulti[filepondImage.name] = FilePond.create(filepondImage, {
+      labelIdle: '+',
+      files: files,
+    });
+  });
+}
+// End Filepond Image Multi
 // Biểu đồ doanh thu
 const revenueChart = document.querySelector("#revenue-chart");
 if(revenueChart) {
-  new Chart(revenueChart, {
-    type: 'line',
-    data: {
-      labels: ['01', '02', '03', '04', '05'],
-      datasets: [
-        {
-          label: 'Tháng 04/2025', // Nhãn của dataset
-          data: [1200000, 1800000, 3200000, 900000, 1600000], // Dữ liệu
-          borderColor: '#4379EE', // Màu viền
-          borderWidth: 1.5, // Độ dày của đường
+  let chart = null;
+  const drawChart = (date) => {
+    // Lấy tháng và năm hiện tại
+      const currentMonth = date.getMonth() + 1; // getMonth() trả về giá trị từ 0 đến 11, nên cần +1
+      const currentYear = date.getFullYear();
+
+      // Tạo một đối tượng Date mới cho tháng trước
+      // Nếu hiện tại là tháng 1 thì new Date(currentYear, 0 - 1, 1) sẽ tự động chuyển thành tháng 12 của năm trước.
+      const previousMonthDate = new Date(currentYear, date.getMonth() - 1, 1);
+
+      // Lấy tháng và năm từ đối tượng previousMonthDate
+      const previousMonth = previousMonthDate.getMonth() + 1;
+      const previousYear = previousMonthDate.getFullYear();
+
+      // Lấy ra tổng số ngày
+      const daysInMonthCurrent = new Date(currentYear, currentMonth, 0).getDate();
+      const daysInMonthPrevious = new Date(previousYear, previousMonth, 0).getDate();
+      const days = daysInMonthCurrent > daysInMonthPrevious ? daysInMonthCurrent : daysInMonthPrevious;
+      const arrayDay = [];
+      for(let i = 1; i <= days; i++) {
+        arrayDay.push(i);
+      }
+
+      const dataFinal = {
+        currentMonth: currentMonth,
+        currentYear: currentYear,
+        previousMonth: previousMonth,
+        previousYear: previousYear,
+        arrayDay: arrayDay
+      };
+
+      fetch(`/${pathadmin}/dashboard/revenue-chart`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        {
-          label: 'Tháng 03/2025', // Nhãn của dataset
-          data: [1000000, 900000, 1200000, 1200000, 1400000], // Dữ liệu
-          borderColor: '#EF3826', // Màu viền
-          borderWidth: 1.5, // Độ dày của đường
-        }
-      ]
-    },
-    options: {
-      plugins: {
-        legend: {
-          position: 'bottom'
-        }
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Ngày'
+        body: JSON.stringify(dataFinal),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error") {
+            alert(data.message);
           }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Doanh thu (VND)'
+
+          if(data.code == "success") {
+            if(chart) {
+              chart.destroy();
+            }
+            chart = new Chart(revenueChart, {
+              type: 'line',
+              data: {
+                labels: arrayDay,
+                datasets: [
+                  {
+                    label: `Tháng ${currentMonth}/${currentYear}`, // Nhãn của dataset
+                    data: data.dataMonthCurrent, // Dữ liệu
+                    borderColor: '#4379EE', // Màu viền
+                    borderWidth: 1.5, // Độ dày của đường
+                  },
+                  {
+                    label: `Tháng ${previousMonth}/${previousYear}`, // Nhãn của dataset
+                    data: data.dataMonthPrevious, // Dữ liệu
+                    borderColor: '#EF3826', // Màu viền
+                    borderWidth: 1.5, // Độ dày của đường
+                  }
+                ]
+              },
+              options: {
+                plugins: {
+                  legend: {
+                    position: 'bottom'
+                  }
+                },
+                scales: {
+                  x: {
+                    title: {
+                      display: true,
+                      text: 'Ngày'
+                    }
+                  },
+                  y: {
+                    title: {
+                      display: true,
+                      text: 'Doanh thu (VND)'
+                    }
+                  }
+                },
+                maintainAspectRatio: false, // Không giữ tỷ lệ khung hình mặc định
+              }
+            });
           }
-        }
-      },
-      maintainAspectRatio: false, // Không giữ tỷ lệ khung hình mặc định
-    }
-  });
+        })
+  }
+
+  // Lấy ngày hiện tại
+  const now = new Date();
+  drawChart(now);
+
+  const inputMonth = document.querySelector(".section-2 input[type='month']");
+  inputMonth.addEventListener("change", () => {
+    const value = inputMonth.value;
+    drawChart(new Date(value));
+  })
 }
 // Hết Biểu đồ doanh thu
+
+
 
 // Category Create Form
 const categoryCreateForm = document.querySelector("#category-create-form");
@@ -176,26 +269,28 @@ if(categoryCreateForm) {
         avatar = avatars[0].file;
       }
       const description = tinymce.get("description").getContent();
-            // Tạo FormData
-            const formData = new FormData();
-            formData.append("name", name);
-            formData.append("parent", parent);
-            formData.append("position", position);
-            formData.append("status", status);
-            formData.append("avatar", avatar);
-            formData.append("description", description);
-      fetch(`/${pathadmin}/category/create`,{
-        method:"POST",
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("parent", parent);
+      formData.append("position", position);
+      formData.append("status", status);
+      formData.append("avatar", avatar);
+      formData.append("description", description);
+      
+      fetch(`/${pathadmin}/category/create`, {
+        method: "POST",
         body: formData
       })
         .then(res => res.json())
         .then(data => {
-          if (data.code == "error"){
-            alert(data.message)
+          if(data.code == "error") {
+            alert(data.message);
           }
 
-          if (data.code == "success"){
-            window.location.href=`/${pathadmin}/category/list`
+          if(data.code == "success") {
+            window.location.href = `/${pathadmin}/category/list`;
           }
         })
     })
@@ -253,7 +348,7 @@ if(categoryEditForm) {
           }
 
           if(data.code == "success") {
-            window.location.href=`/${pathadmin}/category/list`;
+            window.location.reload();
           }
         })
     })
@@ -322,8 +417,8 @@ if(tourCreateForm) {
         });
       });
       // End schedules
-      
-      //tao form data
+
+      // Tạo FormData
       const formData = new FormData();
       formData.append("name", name);
       formData.append("category", category);
@@ -346,7 +441,7 @@ if(tourCreateForm) {
       formData.append("information", information);
       formData.append("schedules", JSON.stringify(schedules));
 
-            // images
+      // images
       if(filePondMulti.images.getFiles().length > 0) {
         filePondMulti.images.getFiles().forEach(item => {
           formData.append("images", item.file);
@@ -355,17 +450,16 @@ if(tourCreateForm) {
       // End images
 
       fetch(`/${pathadmin}/tour/create`, {
-        method:"POST",
+        method: "POST",
         body: formData
       })
         .then(res => res.json())
         .then(data => {
-          if (data.code == "error") {
+          if(data.code == "error") {
             alert(data.message);
           }
 
-          if (data.code == "success") {
-           
+          if(data.code == "success") {
             window.location.href = `/${pathadmin}/tour/list`;
           }
         })
@@ -465,7 +559,7 @@ if(tourEditForm) {
       formData.append("information", information);
       formData.append("schedules", JSON.stringify(schedules));
 
-            // images
+      // images
       if(filePondMulti.images.getFiles().length > 0) {
         filePondMulti.images.getFiles().forEach(item => {
           formData.append("images", item.file);
@@ -484,7 +578,7 @@ if(tourEditForm) {
           }
 
           if(data.code == "success") {
-            window.location.href = `/${pathadmin}/tour/list`;
+            window.location.reload();
           }
         })
     })
@@ -526,6 +620,7 @@ if(orderEditForm) {
       },
     ])
     .onSuccess((event) => {
+      const id = event.target.id.value;
       const fullName = event.target.fullName.value;
       const phone = event.target.phone.value;
       const note = event.target.note.value;
@@ -533,12 +628,32 @@ if(orderEditForm) {
       const paymentStatus = event.target.paymentStatus.value;
       const status = event.target.status.value;
 
-      console.log(fullName);
-      console.log(phone);
-      console.log(note);
-      console.log(paymentMethod);
-      console.log(paymentStatus);
-      console.log(status);
+      const dataFinal = {
+        fullName: fullName,
+        phone: phone,
+        note: note,
+        paymentMethod: paymentMethod,
+        paymentStatus: paymentStatus,
+        status: status
+      };
+
+      fetch(`/${pathadmin}/order/edit/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataFinal),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(data.code == "error") {
+            alert(data.message);
+          }
+
+          if(data.code == "success") {
+            window.location.reload();
+          }
+        })
     })
   ;
 }
@@ -588,8 +703,7 @@ if(settingWebsiteInfoForm) {
         }
       }
 
-
-     
+      // Tạo FormData
       const formData = new FormData();
       formData.append("websiteName", websiteName);
       formData.append("phone", phone);
@@ -599,15 +713,16 @@ if(settingWebsiteInfoForm) {
       formData.append("favicon", favicon);
 
       fetch(`/${pathadmin}/setting/website-info`, {
-        method:"PATCH",
+        method: "PATCH",
         body: formData,
       })
         .then(res => res.json())
         .then(data => {
-          if(data.code == "error" ) {
+          if(data.code == "error") {
             alert(data.message);
           }
-          if(data.code == "success"){
+
+          if(data.code == "success") {
             window.location.reload();
           }
         })
@@ -704,6 +819,7 @@ if(settingAccountAdminCreateForm) {
       if(avatars.length > 0) {
         avatar = avatars[0].file;
       }
+
       // Tạo FormData
       const formData = new FormData();
       formData.append("fullName", fullName);
@@ -715,9 +831,9 @@ if(settingAccountAdminCreateForm) {
       formData.append("password", password);
       formData.append("avatar", avatar);
 
-      fetch(`/${pathadmin}/setting/website-admin/create`, {
-        method:"POST",
-        body:formData
+      fetch(`/${pathadmin}/setting/account-admin/create`, {
+        method: "POST",
+        body: formData,
       })
         .then(res => res.json())
         .then(data => {
@@ -725,11 +841,10 @@ if(settingAccountAdminCreateForm) {
             alert(data.message);
           }
 
-          if(data.code == "success"){
-            window.location.href = `/${pathadmin}/setting/website-admin/list`
+          if(data.code == "success") {
+            window.location.href = `/${pathadmin}/setting/account-admin/list`;
           }
         })
-
     })
   ;
 }
@@ -802,7 +917,6 @@ if(settingAccountAdminEditForm) {
         errorMessage: 'Mật khẩu phải chứa ít nhất một ký tự đặc biệt!',
       },
     ])
-
     .onSuccess((event) => {
       const id = event.target.id.value;
       const fullName = event.target.fullName.value;
@@ -834,12 +948,11 @@ if(settingAccountAdminEditForm) {
       if(password) {
         formData.append("password", password);
       }
-
       formData.append("avatar", avatar);
 
-      fetch(`/${pathadmin}/setting/website-admin/edit/${id}`, {
-        method:"PATCH",
-        body:formData
+      fetch(`/${pathadmin}/setting/account-admin/edit/${id}`, {
+        method: "PATCH",
+        body: formData,
       })
         .then(res => res.json())
         .then(data => {
@@ -847,15 +960,14 @@ if(settingAccountAdminEditForm) {
             alert(data.message);
           }
 
-          if(data.code == "success"){
-            window.location.href = `/${pathadmin}/setting/website-admin/list`
+          if(data.code == "success") {
+            window.location.reload();
           }
         })
-
     })
   ;
 }
-// End Setting Account Admin Create Form
+// End Setting Account Admin Edit Form
 
 // Setting Role Create Form
 const settingRoleCreateForm = document.querySelector("#setting-role-create-form");
@@ -881,27 +993,27 @@ if(settingRoleCreateForm) {
       });
       // End permissions
 
-     
       const dataFinal = {
-        name:name,
+        name: name,
         description: description,
         permissions: permissions
-      }
+      };
+
       fetch(`/${pathadmin}/setting/role/create`, {
-        method:"POST",
+        method: "POST",
         headers: {
-          "Content-Type" : "application/json",
-        }, 
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(dataFinal),
       })
         .then(res => res.json())
         .then(data => {
-          if(data.code == "error"){
+          if(data.code == "error") {
             alert(data.message);
           }
 
-          if(data.code == "success"){
-            window.location.href = `/${pathadmin}/setting/role/list`
+          if(data.code == "success") {
+            window.location.href = `/${pathadmin}/setting/role/list`;
           }
         })
     })
@@ -909,7 +1021,7 @@ if(settingRoleCreateForm) {
 }
 // End Setting Role Create Form
 
-// Setting Role edit Form
+// Setting Role Edit Form
 const settingRoleEditForm = document.querySelector("#setting-role-edit-form");
 if(settingRoleEditForm) {
   const validation = new JustValidate('#setting-role-edit-form');
@@ -934,27 +1046,27 @@ if(settingRoleEditForm) {
       });
       // End permissions
 
-     
       const dataFinal = {
-        name:name,
+        name: name,
         description: description,
         permissions: permissions
-      }
+      };
+
       fetch(`/${pathadmin}/setting/role/edit/${id}`, {
-        method:"PATCH",
+        method: "PATCH",
         headers: {
-          "Content-Type" : "application/json",
-        }, 
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(dataFinal),
       })
         .then(res => res.json())
         .then(data => {
-          if(data.code == "error"){
+          if(data.code == "error") {
             alert(data.message);
           }
 
-          if(data.code == "success"){
-            window.location.href = `/${pathadmin}/setting/role/list`
+          if(data.code == "success") {
+            window.location.reload();
           }
         })
     })
@@ -1020,6 +1132,7 @@ if(profileEditForm) {
         }
       }
 
+      // Tạo FormData
       const formData = new FormData();
       formData.append("fullName", fullName);
       formData.append("email", email);
@@ -1027,20 +1140,19 @@ if(profileEditForm) {
       formData.append("avatar", avatar);
 
       fetch(`/${pathadmin}/profile/edit`, {
-        method:"PATCH",
+        method: "PATCH",
         body: formData,
       })
         .then(res => res.json())
         .then(data => {
-          if(data.code == "error"){
+          if(data.code == "error") {
             alert(data.message);
           }
 
-          if(data.code == "success"){
+          if(data.code == "success") {
             window.location.reload();
           }
         })
-      
     })
   ;
 }
@@ -1098,8 +1210,8 @@ if(profileChangePasswordForm) {
         password: password
       }
 
-      fetch(`/${pathadmin}/profile/change-password`,{
-        method:"PATCH",
+      fetch(`/${pathadmin}/profile/change-password`, {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
@@ -1107,11 +1219,11 @@ if(profileChangePasswordForm) {
       })
         .then(res => res.json())
         .then(data => {
-          if(data.code == "error"){
+          if(data.code == "error") {
             alert(data.message);
           }
 
-          if(data.code == "success"){
+          if(data.code == "success") {
             window.location.reload();
           }
         })
@@ -1119,6 +1231,7 @@ if(profileChangePasswordForm) {
   ;
 }
 // End Profile Change Password Form
+
 // Sider
 const sider = document.querySelector(".sider");
 if(sider) {
@@ -1136,38 +1249,35 @@ if(sider) {
 }
 // End Sider
 
-
-//logout
+// Logout
 const buttonLogout = document.querySelector(".sider .inner-logout");
 if(buttonLogout) {
   buttonLogout.addEventListener("click", () => {
     fetch(`/${pathadmin}/account/logout`, {
-      method: "POST",
-
+      method: "POST"
     })
       .then(res => res.json())
       .then(data => {
         if(data.code == "success") {
-          window.location.href=`/${pathadmin}/account/login`
+          window.location.href = `/${pathadmin}/account/login`;
         }
       })
   })
 }
+// End Logout
 
-//end logout
-
-/* alert */
+// Alert
 const alertTime = document.querySelector("[alert-time]");
-if (alertTime) {
+if(alertTime) {
   let time = alertTime.getAttribute("alert-time");
   time = time ? parseInt(time) : 4000;
   setTimeout(() => {
-    alertTime.remove(); //xoa khoi giao dien
+    alertTime.remove(); // Xóa phần tử khỏi giao diện
   }, time);
 }
-/* end alert */
+// End Alert
 
-/* button delete */
+// Button Delete
 const listButtonDelete = document.querySelectorAll("[button-delete]");
 if(listButtonDelete.length > 0) {
   listButtonDelete.forEach(button => {
@@ -1175,11 +1285,11 @@ if(listButtonDelete.length > 0) {
       const dataApi = button.getAttribute("data-api");
       
       fetch(dataApi, {
-        method: "PATCH",
+        method: "PATCH"
       })
         .then(res => res.json())
         .then(data => {
-          if (data.code == "error"){
+          if(data.code == "error") {
             alert(data.message);
           }
 
@@ -1190,13 +1300,14 @@ if(listButtonDelete.length > 0) {
     })
   })
 }
-/* end button delete */
+// End Button Delete
 
-/* filter status */
-const filterStatus = document.querySelector("[filter-status]")
+// Filter Status
+const filterStatus = document.querySelector("[filter-status]");
 if(filterStatus) {
   const url = new URL(window.location.href);
-//lang nghe thay doi luu chon
+
+  // Lắng nghe thay đổi lựa chọn
   filterStatus.addEventListener("change", () => {
     const value = filterStatus.value;
     if(value) {
@@ -1207,19 +1318,21 @@ if(filterStatus) {
 
     window.location.href = url.href;
   })
-  //hien thi luu chon mac dinh
+
+  // Hiển thị lựa chọn mặc định
   const valueCurrent = url.searchParams.get("status");
-  if (valueCurrent) {
+  if(valueCurrent) {
     filterStatus.value = valueCurrent;
   }
 }
-/* end filter status */
+// End Filter Status
 
-/* filter created by  */
-const filterCreatedBy = document.querySelector("[filter-created-by]")
+// Filter Created By
+const filterCreatedBy = document.querySelector("[filter-created-by]");
 if(filterCreatedBy) {
   const url = new URL(window.location.href);
-//lang nghe thay doi luu chon
+
+  // Lắng nghe thay đổi lựa chọn
   filterCreatedBy.addEventListener("change", () => {
     const value = filterCreatedBy.value;
     if(value) {
@@ -1230,19 +1343,21 @@ if(filterCreatedBy) {
 
     window.location.href = url.href;
   })
-  //hien thi luu chon mac dinh
+
+  // Hiển thị lựa chọn mặc định
   const valueCurrent = url.searchParams.get("createdBy");
-  if (valueCurrent) {
+  if(valueCurrent) {
     filterCreatedBy.value = valueCurrent;
   }
 }
-/* end filter created by */
+// End Filter Created By
 
-/* filter start date  */
-const filterStartDate = document.querySelector("[filter-start-date]")
+// Filter Start Date
+const filterStartDate = document.querySelector("[filter-start-date]");
 if(filterStartDate) {
   const url = new URL(window.location.href);
-//lang nghe thay doi luu chon
+
+  // Lắng nghe thay đổi lựa chọn
   filterStartDate.addEventListener("change", () => {
     const value = filterStartDate.value;
     if(value) {
@@ -1253,19 +1368,21 @@ if(filterStartDate) {
 
     window.location.href = url.href;
   })
-  //hien thi luu chon mac dinh
+
+  // Hiển thị lựa chọn mặc định
   const valueCurrent = url.searchParams.get("startDate");
-  if (valueCurrent) {
+  if(valueCurrent) {
     filterStartDate.value = valueCurrent;
   }
 }
-/* end filter start date */
+// End Filter Start Date
 
-/* filter end date  */
-const filterEndDate = document.querySelector("[filter-end-date]")
+// Filter End Date
+const filterEndDate = document.querySelector("[filter-end-date]");
 if(filterEndDate) {
   const url = new URL(window.location.href);
-//lang nghe thay doi luu chon
+
+  // Lắng nghe thay đổi lựa chọn
   filterEndDate.addEventListener("change", () => {
     const value = filterEndDate.value;
     if(value) {
@@ -1276,27 +1393,28 @@ if(filterEndDate) {
 
     window.location.href = url.href;
   })
-  //hien thi luu chon mac dinh
+
+  // Hiển thị lựa chọn mặc định
   const valueCurrent = url.searchParams.get("endDate");
-  if (valueCurrent) {
+  if(valueCurrent) {
     filterEndDate.value = valueCurrent;
   }
 }
-/* end filter start date */
+// End Filter End Date
 
-//xoa bo loc
-const filterReset = document.querySelector("[filter-reset]")
+// Filter Reset
+const filterReset = document.querySelector("[filter-reset]");
 if(filterReset) {
   const url = new URL(window.location.href);
-  filterReset.addEventListener("click",() => {
-    url.search= "";
 
-    window.location.href= url.href;
+  filterReset.addEventListener("click", () => {
+    url.search = "";
+    window.location.href = url.href;
   })
 }
-//end xoa bo loc
+// End Filter Reset
 
-//check all
+// Check All
 const checkAll = document.querySelector("[check-all]");
 if(checkAll) {
   checkAll.addEventListener("click", () => {
@@ -1306,44 +1424,41 @@ if(checkAll) {
     })
   })
 }
-//end check all
+// End Check All
 
-//change multi
-const changeMulti = document.querySelector("[change-multi]")
-if (changeMulti) {
+// Change Multi
+const changeMulti = document.querySelector("[change-multi]");
+if(changeMulti) {
   const dataApi = changeMulti.getAttribute("data-api");
   const select = changeMulti.querySelector("select");
   const button = changeMulti.querySelector("button");
 
   button.addEventListener("click", () => {
     const option = select.value;
-    const listInputChecked = document.querySelectorAll("[check-item]:checked")
+    const listInputChecked = document.querySelectorAll("[check-item]:checked");
     if(option && listInputChecked.length > 0) {
       const ids = [];
-      listInputChecked.forEach(checkItem => {
-        const id = checkItem.getAttribute("check-item");
+      listInputChecked.forEach(inputChecked => {
+        const id = inputChecked.getAttribute("check-item");
         ids.push(id);
-
-
-
       })
-      
+
       const dataFinal = {
         option: option,
-        ids: ids,
-      }
+        ids: ids
+      };
 
       fetch(dataApi, {
         method: "PATCH",
         headers: {
-          "Content-Type" : "application/json"
+          "Content-Type": "application/json"
         },
-        body:JSON.stringify(dataFinal)
+        body: JSON.stringify(dataFinal)
       })
         .then(res => res.json())
         .then(data => {
           if(data.code == "error") {
-            alert(data.message)
+            alert(data.message);
           }
 
           if(data.code == "success") {
@@ -1351,41 +1466,45 @@ if (changeMulti) {
           }
         })
     } else {
-
       alert("Vui lòng chọn option và bản ghi muốn thực hiện!");
     }
   })
 }
-//end change multi
+// End Change Multi
 
-//search
+// Search
 const search = document.querySelector("[search]");
 if(search) {
   const url = new URL(window.location.href);
 
+  // Lắng nghe phím đang gõ
   search.addEventListener("keyup", (event) => {
     if(event.code == "Enter") {
       const value = search.value;
       if(value) {
-        url.searchParams.set("keyword", value);
+        url.searchParams.set("keyword", value.trim());
       } else {
         url.searchParams.delete("keyword");
-
       }
 
       window.location.href = url.href;
     }
   })
+
+  // Hiển thị lựa chọn mặc định
+  const valueCurrent = url.searchParams.get("keyword");
+  if(valueCurrent) {
+    search.value = valueCurrent;
+  }
 }
-//end search
+// End Search
 
-
-
-/* pagination */
-const pagination = document.querySelector("[pagination]")
+// Pagination
+const pagination = document.querySelector("[pagination]");
 if(pagination) {
   const url = new URL(window.location.href);
-//lang nghe thay doi luu chon
+
+  // Lắng nghe thay đổi lựa chọn
   pagination.addEventListener("change", () => {
     const value = pagination.value;
     if(value) {
@@ -1396,65 +1515,11 @@ if(pagination) {
 
     window.location.href = url.href;
   })
-  //hien thi luu chon mac dinh
+
+  // Hiển thị lựa chọn mặc định
   const valueCurrent = url.searchParams.get("page");
-  if (valueCurrent) {
+  if(valueCurrent) {
     pagination.value = valueCurrent;
   }
 }
-/* end pagination */
-
-
-/* filter categories  */
-const filtercategories = document.querySelector("[filter-categories]")
-if(filtercategories) {
-  const url = new URL(window.location.href);
-//lang nghe thay doi luu chon
-  filtercategories.addEventListener("change", () => {
-    const value = filtercategories.value;
-    if(value) {
-      url.searchParams.set("categories", value);
-    } else {
-      url.searchParams.delete("categories");
-    }
-
-    window.location.href = url.href;
-  })
-  //hien thi luu chon mac dinh
-  const valueCurrent = url.searchParams.get("categories");
-  if (valueCurrent) {
-    filtercategories.value = valueCurrent;
-  }
-}
-/* end filter categories */
-
-// Filepond Image Multi
-const listFilepondImageMulti = document.querySelectorAll("[filepond-image-multi]");
-let filePondMulti = {};
-if(listFilepondImageMulti.length > 0) {
-  listFilepondImageMulti.forEach(filepondImage => {
-    FilePond.registerPlugin(FilePondPluginImagePreview);
-    FilePond.registerPlugin(FilePondPluginFileValidateType);
-
-    let files = null;
-    const elementListImageDefault = filepondImage.closest("[list-image-default]");
-    if(elementListImageDefault) {
-      let listImageDefault = elementListImageDefault.getAttribute("list-image-default");
-      if(listImageDefault) {
-        listImageDefault = JSON.parse(listImageDefault);
-        files = [];
-        listImageDefault.forEach(image => {
-          files.push({
-            source: image, // Đường dẫn ảnh
-          });
-        })
-      }
-    }
-
-    filePondMulti[filepondImage.name] = FilePond.create(filepondImage, {
-      labelIdle: '+',
-      files: files,
-    });
-  });
-}
-// End Filepond Image Multi
+// End Filter Status

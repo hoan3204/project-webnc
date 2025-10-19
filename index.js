@@ -32,15 +32,6 @@ global.pathadmin = variableConfig.pathadmin;
 app.use(express.json());
 app.use(cookieParser("hoan322004"));
 
-//su dung cookie-parser
-app.use(
-  session({
-    secret: "hoan322004",
-    resave: false,
-    saveUninitialized: true,
-    cookie: { maxAge: 60000 },
-  })
-);
 
 //nhung flash
 app.use(session({ cookie: { maxage: 60000 }}))

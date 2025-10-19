@@ -1,33 +1,36 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const cartItemSchema = new mongoose.Schema({
-  tourId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tour', required: true },
-  name: String,
-  avatar: String,
-  slug: String,
-  departureDateFormat: String,
-  locationFrom: String,
-  locationFromName: String,
-  priceNewAdult: Number,
-  priceNewChildren: Number,
-  priceNewBaby: Number,
-  quantityAdult: Number,
-  quantityChildren: Number,
-  quantityBaby: Number,
-  checked: Boolean
-}, { _id: false });
+const schema = new mongoose.Schema(
+  {
+    orderCode: String,
+    fullName: String,
+    phone: String,
+    note: String,
+    items: Array,
+    subTotal: Number,
+    discount: {
+      type: Number,
+      default: 0
+    },
+    total: Number,
+    paymentMethod: String,
+    paymentStatus: String,
+    status: String,
+    updatedBy: String,
+    deleted: {
+      type: Boolean,
+      default: false
+    },
+    deletedBy: String,
+    deletedAt: Date
+  },
+  {
+    timestamps: true, // Tự động sinh ra trường createdAt và updatedAt
+  }
+);
 
-const orderSchema = new mongoose.Schema({
-  fullName: { type: String, required: true },
-  phone: { type: String, required: true },
-  note: String,
-  method: String,
-  cart: [cartItemSchema],
-  deleted: { type: Boolean, default: false },
-  deletedBy: String,
-  deletedAt: Date
-}, {
-  timestamps: true
-});
 
-module.exports = mongoose.model('Order', orderSchema, 'Order');
+const Order = mongoose.model('Order', schema, "Order");
+
+
+module.exports = Order;

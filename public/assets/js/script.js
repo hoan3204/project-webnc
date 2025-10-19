@@ -294,24 +294,23 @@ if(emailForm) {
       const email = event.target.email.value;
       
       const dataFinal = {
-        email:email
-      }
-
+        email: email,
+      };
+      
       fetch(`/contact/create`, {
-        method:"POST",
+        method: "POST",
         headers: {
-          "Content-Type" : "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(dataFinal)
+        body: JSON.stringify(dataFinal),
       })
         .then(res => res.json())
         .then(data => {
-          if( data.code == "error")
-          {
-            alert(data.message)
+          if(data.code == "error") {
+            alert(data.message);
           }
 
-          if(data.code =="success") {
+          if(data.code == "success") {
             window.location.reload();
           }
         })
@@ -373,35 +372,56 @@ if(orderForm) {
       const note = event.target.note.value;
       const method = event.target.method.value;
 
-       // Lấy giỏ hàng từ localStorage
-      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+      let cart = JSON.parse(localStorage.getItem("cart"));
+      cart = cart.filter(item => {
+        return (item.checked == true) && (item.quantityAdult + item.quantityChildren + item.quantityBaby > 0)
+      });
 
-      const dataFinal = {
-        fullName: fullName,
-        phone: phone,
-        note: note,
-        method:method,
-        cart: cart
-      }
-
-      fetch(`/order/create`, {
-        method:"POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body:JSON.stringify(dataFinal)
+      cart = cart.map(item => {
+        return {
+          tourId: item.tourId,
+          locationFrom: item.locationFrom,
+          quantityAdult: item.quantityAdult,
+          quantityChildren: item.quantityChildren,
+          quantityBaby: item.quantityBaby,
+        }
       })
-        .then(res => res.json())
-        .then(data => {
-          if(data.code == "error"){
-            alert(data.code);
-          }
 
-          if(data.code == "success"){
-            localStorage.removeItem("cart"); // Xóa giỏ hàng
-            window.location.href = `/`
-          }
+      if(cart.length > 0) {
+        const dataFinal = {
+          fullName: fullName,
+          phone: phone,
+          note: note,
+          paymentMethod: method,
+          items: cart
+        };
+
+        fetch(`/order/create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataFinal),
         })
+          .then(res => res.json())
+          .then(data => {
+            if(data.code == "error") {
+              alert(data.message);
+            }
+  
+            if(data.code == "success") {
+              // Cập nhật lại giỏ hàng
+              let cart = JSON.parse(localStorage.getItem("cart"));
+              cart = cart.filter(item => item.checked == false);
+              localStorage.setItem("cart", JSON.stringify(cart));
+
+              // Chuyển hướng sang trang đặt hành thành công
+              window.location.href = `/order/success?orderId=${data.orderId}&phone=${phone}`;
+            }
+          })
+      } else {
+        alert("Vui lòng đặt ít nhất 1 tour!");
+      }
     })
   ;
 
@@ -421,6 +441,7 @@ if(orderForm) {
   // End List Input Method
 }
 // End Order Form
+
 // Alert
 const alertTime = document.querySelector("[alert-time]");
 if(alertTime) {
@@ -431,6 +452,7 @@ if(alertTime) {
   }, time);
 }
 // End Alert
+
 // Box Filter
 const boxFilter = document.querySelector(".box-filter");
 if(boxFilter) {
@@ -462,6 +484,7 @@ if(boxFilter) {
   })
 }
 // End Box Filter
+
 // Form Search
 const formSearch = document.querySelector("[form-search]");
 if(formSearch) {
@@ -512,6 +535,7 @@ if(formSearch) {
   })
 }
 // End Form Search
+
 // Box Tour Detail
 const boxTourDetail = document.querySelector(".box-tour-detail");
 if(boxTourDetail) {
@@ -563,7 +587,7 @@ if(boxTourDetail) {
         quantityChildren: quantityChildren,
         quantityBaby: quantityBaby,
         locationFrom: locationFrom,
-        checked:true
+        checked: true
       };
 
       const cart = JSON.parse(localStorage.getItem("cart"));
@@ -651,7 +675,7 @@ const drawCart = () => {
                 <div class="inner-item">
                   <div class="inner-item-label">Người lớn:</div>
                   <div class="inner-item-input">
-                     <input 
+                    <input 
                       value="${item.quantityAdult}" 
                       min="0" 
                       type="number"
@@ -670,7 +694,7 @@ const drawCart = () => {
                 <div class="inner-item">
                   <div class="inner-item-label">Trẻ em:</div>
                   <div class="inner-item-input">
-                     <input 
+                    <input 
                       value="${item.quantityChildren}" 
                       min="0" 
                       type="number"
@@ -723,11 +747,10 @@ const drawCart = () => {
         const subTotalPrice = data.cart.reduce((sum, item) => {
           if(item.checked) {
             return sum + ((item.priceNewAdult * item.quantityAdult) + (item.priceNewChildren * item.quantityChildren) + (item.priceNewBaby * item.quantityBaby));
-          }else {
+          } else {
             return sum;
           }
-          }, 0);
-
+        }, 0);
         const discount = 0;
         const totalPrice = subTotalPrice - discount;
         
@@ -770,7 +793,7 @@ const drawCart = () => {
         })
         // Hết Sự kiện xóa item
 
-      }        // Sự kiện check item
+        // Sự kiện check item
         const listInputCheck = document.querySelectorAll("[input-check]");
         listInputCheck.forEach(input => {
           input.addEventListener("change", () => {
@@ -785,7 +808,7 @@ const drawCart = () => {
           })
         })
         // Hết Sự kiện check item
-
+      }
     })
 }
 

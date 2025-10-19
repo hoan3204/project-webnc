@@ -1,75 +1,98 @@
-const Order = require('../../models/order.model')
-const Tour = require('../../models/tour.model')
-const moment = require('moment');
-module.exports.list = async (req,res) => {
+const Order = require("../../models/order.model");
+const City = require("../../models/city.model");
+const variableConfig = require("../../config/variable");
+const moment = require("moment");
 
-    const orderList = await Order.find({});
- 
-    
-    // Tính tổng tiền cho từng đơn hàng
-    orderList.forEach(order => {
-        let total = 0;
-        order.cart.forEach(cart => {
-            total += 
-                (cart.quantityAdult || 0) * (cart.priceNewAdult || 0) +
-                (cart.quantityChildren || 0) * (cart.priceNewChildren || 0) +
-                (cart.quantityBaby || 0) * (cart.priceNewBaby || 0);
-        });
+module.exports.list = async (req, res) => {
+  const find = {
+    deleted: false
+  };
 
-        order.total = total;
-
-        
-        // Format ngày đặt
-        order.createdTime = moment(order.createdAt).format('HH:mm');
-        order.createdDate = moment(order.createdAt).format('DD/MM/YYYY');
+  const orderList = await Order
+    .find(find)
+    .sort({
+      createdAt: "desc"
     });
 
-
-
+  for (const orderDetail of orderList) {
+    orderDetail.paymentMethodName = variableConfig.paymentMethod.find(item => item.value == orderDetail.paymentMethod).label;
     
-    res.render('admin/pages/order-list', {
-        pageTitle:"Quản lý đơn hàng",
-        orderList:orderList,
-    })
+    orderDetail.paymentStatusName = variableConfig.paymentStatus.find(item => item.value == orderDetail.paymentStatus).label;
+
+    orderDetail.statusName = variableConfig.orderStatus.find(item => item.value == orderDetail.status).label;
+
+    orderDetail.createdAtTime = moment(orderDetail.createdAt).format("HH:mm");
+    orderDetail.createdAtDate = moment(orderDetail.createdAt).format("DD/MM/YYYY");
+  }
+
+  res.render("admin/pages/order-list", {
+    pageTitle: "Quản lý đơn hàng",
+    orderList: orderList
+  })
 }
 
 module.exports.edit = async (req, res) => {
+  try {
     const id = req.params.id;
 
     const orderDetail = await Order.findOne({
-        _id: id,
-        deleted: false,
-    });
+      _id: id,
+      deleted: false
+    })
 
-    // Tính tổng tiền cho đơn hàng
-    let total = 0;
-    orderDetail.cart.forEach(cart => {
-        total += 
-            (cart.quantityAdult || 0) * (cart.priceNewAdult || 0) +
-            (cart.quantityChildren || 0) * (cart.priceNewChildren || 0) +
-            (cart.quantityBaby || 0) * (cart.priceNewBaby || 0);
-    });
-    orderDetail.total = total;
+    orderDetail.createdAtFormat = moment(orderDetail.createdAt).format("YYYY-MM-DDTHH:mm");
 
-    // Format ngày đặt
-    orderDetail.createdTime = moment(orderDetail.createdAt).format('HH:mm');
-    orderDetail.createdDate = moment(orderDetail.createdAt).format('DD/MM/YYYY');
-    orderDetail.createdFull = moment(orderDetail.createdAt).format('DD/MM/YYYY HH:mm A');
+    for (const item of orderDetail.items) {
+      const city = await City.findOne({
+        _id: item.locationFrom
+      });
+      item.locationFromName = city.name;
+      item.departureDateFormat = moment(item.departureDate).format("DD/MM/YYYY");
+    }
 
-    res.render('admin/pages/order-edit', {
-        pageTitle: "Đơn hàng: OD000001",
-        orderDetail: orderDetail
-    });
+    res.render("admin/pages/order-edit", {
+      pageTitle: `Đơn hàng: ${orderDetail.orderCode}`,
+      orderDetail: orderDetail,
+      paymentMethod: variableConfig.paymentMethod,
+      paymentStatus: variableConfig.paymentStatus,
+      orderStatus: variableConfig.orderStatus
+    })
+  } catch (error) {
+    res.redirect(`/${pathAdmin}/order/list`);
+  }
 }
 
-module.exports.deletePatch = async (req , res ) => {
+module.exports.editPatch = async (req, res) => {
+  try {
     const id = req.params.id;
 
-    await Order.deleteOne({
-        _id:id,
-    })
-    req.flash("success", "Xóa thành công!")
+    const order = await Order.findOne({
+      _id: id,
+      deleted: false
+    });
+
+    if(!order) {
+      res.json({
+        code: "error",
+        message: "Thông tin đơn hàng không hợp lệ!"
+      })
+      return;
+    }
+
+    await Order.updateOne({
+      _id: id,
+      deleted: false
+    }, req.body);
+
+    req.flash("success", "Cập nhật đơn hàng thành công!");
+
     res.json({
-        code:"success"
+      code: "success"
     })
+  } catch (error) {
+    res.json({
+      code: "error",
+      message: "Thông tin đơn hàng không hợp lệ!"
+    })
+  }
 }
