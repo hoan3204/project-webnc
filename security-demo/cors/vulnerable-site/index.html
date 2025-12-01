@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Attack Demo - Data Exfiltration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .demo-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .vulnerable {
+            border-left: 5px solid #ff6b6b;
+        }
+
+        .secure {
+            border-left: 5px solid #51cf66;
+        }
+
+        .endpoint-url {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            word-break: break-all;
+            font-size: 0.95em;
+            color: #555;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            min-width: 120px;
+        }
+
+        .btn-attack {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-attack:hover {
+            background: #ff5252;
+            transform: scale(1.02);
+        }
+
+        .btn-test {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-test:hover {
+            background: #40c057;
+            transform: scale(1.02);
+        }
+
+        .btn-clear {
+            background: #a6a6a6;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #909090;
+        }
+
+        .output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #333;
+            line-height: 1.6;
+        }
+
+        .output-title {
+            color: #ffcc00;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .success {
+            color: #51cf66;
+        }
+
+        .error {
+            color: #ff6b6b;
+        }
+
+        .warning {
+            color: #ffd43b;
+        }
+
+        .info {
+            color: #74c0fc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .status-vulnerable {
+            background: #ffe0e0;
+            color: #ff6b6b;
+        }
+
+        .status-secure {
+            background: #e0f0d0;
+            color: #51cf66;
+        }
+
+        .info-box {
+            background: #e7f5ff;
+            border-left: 4px solid #74c0fc;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #1d3a6b;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .config-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .config-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border-left: 3px solid #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .demo-section {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .log-entry {
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔓 CORS Misconfiguration Demo</h1>
+            <p>Bản Demo: Access-Control-Allow-Origin: * → Data Exfiltration & Fix</p>
+        </div>
+
+        <div class="demo-section">
+            <!-- Vulnerable Endpoint Demo -->
+            <div class="card vulnerable">
+                <h2>❌ Vulnerable Endpoint</h2>
+                <span class="status-badge status-vulnerable">VULNERABLE</span>
+
+                <div class="info-box">
+                    <strong>Lỗ hổng:</strong> Endpoint này cho phép bất kỳ domain nào truy cập
+                    <br><strong>Impact:</strong> Data Exfiltration - Dữ liệu nhạy cảm bị đánh cắp
+                </div>
+
+                <p><strong>CORS Config:</strong></p>
+                <div class="endpoint-url">Access-Control-Allow-Origin: *</div>
+
+                <p><strong>Endpoint URL:</strong></p>
+                <div class="endpoint-url" id="vuln-url">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <div class="config-section">
+                    <h3>🔍 Attack Scenario</h3>
+                    <div class="config-item">1. Kẻ tấn công tạo trang web độc hại</div>
+                    <div class="config-item">2. JavaScript trên trang này gọi API vulnerable</div>
+                    <div class="config-item">3. Trình duyệt cho phép vì có Access-Control-Allow-Origin: *</div>
+                    <div class="config-item">4. Dữ liệu nhạy cảm bị đánh cắp</div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-attack" onclick="attackVulnerable()">
+                        🚀 Thực Hiện Attack
+                    </button>
+                    <button class="btn-clear" onclick="clearLog('vuln-log')">
+                        Xóa Log
+                    </button>
+                </div>
+
+                <div class="output">
+                    <div class="output-title">📋 Attack Log:</div>
+                    <div id="vuln-log">
+                        <div class="log-entry info">Chờ thực hiện attack...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secure Endpoint Demo -->
+            <div class="card secure">
+                <h2>✅ Secure Endpoint</h2>
+                <span class="status-badge status-secure">SECURE</span>
+
+                <div class="info-box">
+                    <strong>Fix:</strong> Sử dụng CORS Whitelist
+                    <br><strong>Result:</strong> Chỉ những domain được phép mới truy cập được
+                </div>
+
+                <p><strong>CORS Config:</strong></p>
+                <div class="endpoint-url">Access-Control-Allow-Origin: [whitelist]</div>
+
+                <p><strong>Endpoint URL:</strong></p>
+                <div class="endpoint-url" id="secure-url">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <div class="config-section">
+                    <h3>✅ Protection Mechanism</h3>
+                    <div class="config-item">1. Check Origin Header</div>
+                    <div class="config-item">2. Validate Against Whitelist</div>
+                    <div class="config-item">3. Reject nếu không hợp lệ</div>
+                    <div class="config-item">4. Gửi CORS header chỉ cho phép origin</div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-test" onclick="testSecure()">
+                        🔍 Test Secure Endpoint
+                    </button>
+                    <button class="btn-clear" onclick="clearLog('secure-log')">
+                        Xóa Log
+                    </button>
+                </div>
+
+                <div class="output">
+                    <div class="output-title">📋 Test Log:</div>
+                    <div id="secure-log">
+                        <div class="log-entry info">Chờ test...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="card">
+            <h2>⚙️ Configuration Whitelist</h2>
+            <div class="config-section">
+                <h3>Allowed Origins (từ .env)</h3>
+                <div class="config-item" id="whitelist-config">
+                    Loading whitelist configuration...
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Environment Variables</h3>
+                <div class="config-item">CORS_WHITELIST=https://yourdomain.com,https://app.yourdomain.com,http://localhost:3000</div>
+            </div>
+        </div>
+
+        <!-- Code Examples -->
+        <div class="card">
+            <h2>💻 Code Examples</h2>
+            
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">❌ Vulnerable Code:</h3>
+            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ff6b6b;">
+                <pre style="overflow-x: auto;"><code>// INSECURE
+exports.insecureData = (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*') // ❌ VULNERABLE
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.json({
+    apiKey: 'secret-key-123',
+    userData: { email: 'user@example.com' }
+  })
+}</code></pre>
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">✅ Secure Code:</h3>
+            <div style="background: #d4edda; padding: 15px; border-radius: 5px; border-left: 4px solid #51cf66;">
+                <pre style="overflow-x: auto;"><code>// SECURE
+const whitelist = (process.env.CORS_WHITELIST || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean)
+
+exports.secureData = (req, res) => {
+  const origin = req.headers.origin
+  const isAllowed = whitelist.includes(origin)
+
+  res.setHeader('Vary', 'Origin')
+
+  if (!isAllowed) {
+    return res.status(403).json({
+      error: 'CORS policy violation'
+    })
+  }
+
+  res.setHeader('Access-Control-Allow-Origin', origin)
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.json({
+    apiKey: 'secret-key-123',
+    userData: { email: 'user@example.com' }
+  })
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            // Adjust these URLs based on your backend
+            vulnerableEndpoint: '/cors/insecure-data',
+            secureEndpoint: '/cors/secure-data',
+            configEndpoint: '/cors/config',
+            baseUrl: window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+                ? 'http://localhost:3000'
+                : window.location.origin
+        };
+
+        // Update URLs on page load
+        window.addEventListener('load', () => {
+            document.getElementById('vuln-url').textContent = `${CONFIG.baseUrl}${CONFIG.vulnerableEndpoint}`;
+            document.getElementById('secure-url').textContent = `${CONFIG.baseUrl}${CONFIG.secureEndpoint}`;
+            loadWhitelistConfig();
+        });
+
+        function addLog(elementId, message, type = 'info') {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString('vi-VN');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog(elementId) {
+            const logElement = document.getElementById(elementId);
+            logElement.innerHTML = '<div class="log-entry info">Log cleared. Chờ action tiếp theo...</div>';
+        }
+
+        async function attackVulnerable() {
+            const logId = 'vuln-log';
+            clearLog(logId);
+            addLog(logId, '🚀 Bắt đầu attack...');
+
+            try {
+                addLog(logId, `📡 Gửi request đến: ${CONFIG.baseUrl}${CONFIG.vulnerableEndpoint}`, 'info');
+
+                const response = await fetch(`${CONFIG.baseUrl}${CONFIG.vulnerableEndpoint}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'omit'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                addLog(logId, `✅ Request thành công! Status: ${response.status}`, 'success');
+                addLog(logId, `📨 Response Headers:`, 'info');
+
+                // Log response headers
+                response.headers.forEach((value, name) => {
+                    if (name.toLowerCase().includes('cors') || name.toLowerCase().includes('allow') || name.toLowerCase() === 'origin') {
+                        addLog(logId, `   ${name}: ${value}`, 'warning');
+                    }
+                });
+
+                addLog(logId, `💾 Dữ liệu bị đánh cắp:`, 'error');
+                addLog(logId, `   Source: ${data.source}`, 'warning');
+                addLog(logId, `   Message: ${data.message}`, 'warning');
+
+                if (data.data) {
+                    addLog(logId, `   Data: ${JSON.stringify(data.data, null, 2)}`, 'error');
+                }
+
+                addLog(logId, `🎯 Attack thành công! Dữ liệu nhạy cảm bị đánh cắp!`, 'error');
+
+                // Simulate sending to attacker's server
+                addLog(logId, `📤 Gửi dữ liệu đến attacker server...`, 'warning');
+                setTimeout(() => {
+                    addLog(logId, `✅ Dữ liệu đã được lưu trữ trên attacker server!`, 'error');
+                }, 1000);
+
+            } catch (error) {
+                addLog(logId, `❌ Error: ${error.message}`, 'error');
+                addLog(logId, `Có thể lý do: ${error.message.includes('CORS') ? 'CORS policy blocked' : 'Network error'}`, 'warning');
+            }
+        }
+
+        async function testSecure() {
+            const logId = 'secure-log';
+            clearLog(logId);
+            addLog(logId, '🔍 Bắt đầu test secure endpoint...');
+
+            try {
+                addLog(logId, `📡 Gửi request đến: ${CONFIG.baseUrl}${CONFIG.secureEndpoint}`, 'info');
+
+                const response = await fetch(`${CONFIG.baseUrl}${CONFIG.secureEndpoint}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'omit'
+                });
+
+                addLog(logId, `📨 Response Status: ${response.status}`, 'info');
+
+                if (response.status === 403) {
+                    addLog(logId, `🔒 Request bị từ chối! Origin không trong whitelist`, 'success');
+                    const data = await response.json();
+                    addLog(logId, `💬 Message: ${data.message}`, 'info');
+                    addLog(logId, `✅ Secure endpoint hoạt động đúng!`, 'success');
+                } else if (response.ok) {
+                    const data = await response.json();
+                    addLog(logId, `✅ Request thành công! Status: ${response.status}`, 'success');
+                    addLog(logId, `📨 CORS Headers:`, 'info');
+
+                    response.headers.forEach((value, name) => {
+                        if (name.toLowerCase().includes('cors') || name.toLowerCase().includes('allow') || name.toLowerCase() === 'origin') {
+                            addLog(logId, `   ${name}: ${value}`, 'success');
+                        }
+                    });
+
+                    addLog(logId, `💾 Data: ${data.message}`, 'success');
+                }
+
+            } catch (error) {
+                addLog(logId, `❌ Error: ${error.message}`, 'error');
+                if (error.message.includes('CORS')) {
+                    addLog(logId, `✅ CORS policy correctly blocked this request!`, 'success');
+                } else {
+                    addLog(logId, `Note: ${error.message}`, 'warning');
+                }
+            }
+        }
+
+        async function loadWhitelistConfig() {
+            try {
+                const response = await fetch(`${CONFIG.baseUrl}${CONFIG.configEndpoint}`, {
+                    credentials: 'omit'
+                });
+
+                if (response.ok) {
+                    const config = await response.json();
+                    const whitelistDiv = document.getElementById('whitelist-config');
+
+                    if (config.whitelist && config.whitelist.length > 0) {
+                        whitelistDiv.innerHTML = config.whitelist
+                            .map(origin => `<div class="config-item">✓ ${origin}</div>`)
+                            .join('');
+                    } else {
+                        whitelistDiv.innerHTML = '<div class="config-item">❌ Không có whitelist được cấu hình</div>';
+                    }
+                }
+            } catch (error) {
+                console.warn('Could not load whitelist config:', error);
+                document.getElementById('whitelist-config').innerHTML = '<div class="config-item">⚠️ Không thể load config</div>';
+            }
+        }
+    </script>
+</body>
+</html>

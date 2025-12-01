@@ -22,7 +22,7 @@ Router.use('/contact', contactroute);
 Router.use('/category', categoryroute)
 Router.use('/search', searchroute);
 Router.use('/order', orderRoute);
-Router.use('/cors-demo', corsRoute);
+Router.use('/cors', corsRoute);
 
 
 module.exports = Router;

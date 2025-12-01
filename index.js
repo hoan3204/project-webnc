@@ -22,6 +22,9 @@ app.set('view engine', 'pug');
 //thiet lap file tinh
 app.use(express.static(path.join(__dirname, "public")));
 
+// CORS Demo - Serve static CORS demo files
+app.use('/cors-demo', express.static(path.join(__dirname, "security-demo/cors/vulnerable-site")));
+
 //tao bien toan cuc trong pug
 app.locals.pathadmin = variableConfig.pathadmin;
 
