@@ -7,6 +7,7 @@ const contactroute = require('./contact.route')
 const categoryroute = require('./category.route')
 const searchroute = require('./search.route')
 const orderRoute = require('./order.route')
+const corsRoute = require('./cors.route')
 
 const settingMiddleware = require('../../middlewares/client/setting.middleware')
 const categoryMiddleware = require("../../middlewares/client/category.middleware")
@@ -21,6 +22,7 @@ Router.use('/contact', contactroute);
 Router.use('/category', categoryroute)
 Router.use('/search', searchroute);
 Router.use('/order', orderRoute);
+Router.use('/cors-demo', corsRoute);
 
 
 module.exports = Router;
