@@ -18,7 +18,7 @@
 | # | Tên Thành Viên | Vai Trò | Công Việc |
 |---|---|---|---|
 | 1 | Nguyễn Đình Hoàn - 22810310375 | Trưởng nhóm - Backend Lead | • Setup project & Express.js<br>• Viết CORS controller (vulnerable & secure)<br>• Cấu hình CORS middleware<br>• Thiết lập MongoDB & data models<br>• Deploy lên Render.com<br>• Test backend endpoints |
-| 2 | Đặng Hoàng ninh - 22810310370 | Frontend Lead | • Tạo interactive demo UI<br>• Xây dựng attack simulation interface<br>• Thiết kế real-time logging system<br>• Tạo responsive design<br>• Test trên browsers khác nhau<br>• Integration frontend-backend |
+| 2 | Đặng Hoàng Ninh - 22810310370 | Frontend Lead | • Tạo interactive demo UI<br>• Xây dựng attack simulation interface<br>• Thiết kế real-time logging system<br>• Tạo responsive design<br>• Test trên browsers khác nhau<br>• Integration frontend-backend |
 | 3 | Nguyễn Xuân Thành -22810310360 | Testing & Security Lead | • Security testing toàn bộ project<br>• Viết test cases & scenarios<br>• Tấn công demo (attack simulation)<br>• Kiểm tra whitelist validation<br>• Performance testing<br>• Verify production deployment |
 
 
