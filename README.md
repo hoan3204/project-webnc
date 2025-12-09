@@ -17,12 +17,11 @@
 
 | # | Tên Thành Viên | Vai Trò | Công Việc |
 |---|---|---|---|
-| 1 | **Nguyễn Văn A** | Trưởng nhóm - Backend Lead | • Setup project & Express.js<br>• Viết CORS controller (vulnerable & secure)<br>• Cấu hình CORS middleware<br>• Thiết lập MongoDB & data models<br>• Deploy lên Render.com |
-| 2 | **Trần Thị B** | Frontend Lead | • Tạo interactive demo UI<br>• Xây dựng attack simulation interface<br>• Thiết kế real-time logging system<br>• Tạo responsive design<br>• Test trên browsers khác nhau |
-| 3 | **Hoàng Minh C** | Documentation & Testing | • Viết documentation toàn bộ<br>• Tạo project proposal (40+ pages)<br>• Viết beginner's guide<br>• Code explanation chi tiết<br>• Test case & security testing<br>• Hướng dẫn sử dụng demo |
+| 1 | Nguyễn Đình Hoàn - 22810310375 | Trưởng nhóm - Backend Lead | • Setup project & Express.js<br>• Viết CORS controller (vulnerable & secure)<br>• Cấu hình CORS middleware<br>• Thiết lập MongoDB & data models<br>• Deploy lên Render.com |
+| 2 | Đặng Hoàn ninh - 22810310370 | Frontend Lead | • Tạo interactive demo UI<br>• Xây dựng attack simulation interface<br>• Thiết kế real-time logging system<br>• Tạo responsive design<br>• Test trên browsers khác nhau |
+| 3 | Nguyễn Xuân Thành -22810310360 | Documentation & Testing | • Viết documentation toàn bộ<br>• Tạo project proposal (40+ pages)<br>• Viết beginner's guide<br>• Code explanation chi tiết<br>• Test case & security testing<br>• Hướng dẫn sử dụng demo |
 
-**Khoá học:** WEBNC (Web Application Security)  
-**Ghi chú:** Việc được chia đều, mỗi thành viên có trách nhiệm rõ ràng
+
 
 ---
 
@@ -111,27 +110,7 @@ npm start
 Mở browser và vào: **http://localhost:3000/security/cors/**
 
 #### Bước 3: Thấy giao diện như sau:
-
-```
-╔════════════════════════════════════════╗
-║    🔐 CORS Misconfiguration Demo       ║
-├════════════════════════════════════════┤
-║                                        ║
-║  ❌ Vulnerable Endpoint               ║
-║  [Access Insecure Data] Button         ║
-║                                        ║
-║  ✅ Secure Endpoint                   ║
-║  [Access Secure Data] Button           ║
-║                                        ║
-║  📋 Logs:                             ║
-║  ├─ Request sent to /insecure-data    ║
-║  ├─ Response: 200 OK                   ║
-║  └─ Data received...                   ║
-║                                        ║
-╚════════════════════════════════════════╝
-```
-
----
+![alt text](image.png)
 
 ## 🎮 Demo Endpoints
 
@@ -321,67 +300,21 @@ HTTP 403 Forbidden:
 
 ### Ảnh 1: Giao Diện Demo
 
-```
+![alt text](image-2.png)
 Demo Interface (http://localhost:3000/security/cors/):
 
-┌─────────────────────────────────────────────────────────┐
-│  🔐 CORS Misconfiguration Security Demo                 │
-│                                                          │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │ ❌ VULNERABLE ENDPOINT (Insecure Data)           │  │
-│  │                                                  │  │
-│  │ [🔴 Access Insecure Data]    Status: -           │  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                          │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │ ✅ SECURE ENDPOINT (Secure Data)                 │  │
-│  │                                                  │  │
-│  │ [🟢 Access Secure Data]      Status: -           │  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                          │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │ 📋 Response Logs                                 │  │
-│  │ ─────────────────────────────────────────────   │  │
-│  │ > Request sent to insecure endpoint...          │  │
-│  │ > Status: 200 OK                                │  │
-│  │ > Response received                             │  │
-│  │ > Headers: Access-Control-Allow-Origin: *       │  │
-│  │                                                  │  │
-│  │ > Request sent to secure endpoint...            │  │
-│  │ > Status: 403 Forbidden                         │  │
-│  │ > Error: CORS policy violation                  │  │
-│  └──────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-```
+
 
 ### Ảnh 2: Request/Response Flow
 
-```
-Browser (http://localhost:3000)
-
-  ├─ Request 1: GET /security/cors/insecure-data
-  │   ├─ Origin: http://localhost:3000
-  │   └─ Response: 200 OK + "*" header + Data ✅
-  │
-  └─ Request 2: GET /security/cors/secure-data
-      ├─ Origin: http://localhost:3000
-      └─ Response: 200 OK + specific origin + Data ✅
-
-Attacker (http://attacker.com)
-
-  ├─ Request 1: GET /security/cors/insecure-data
-  │   ├─ Origin: http://attacker.com
-  │   └─ Response: 200 OK + "*" header + Data ❌ (Lỗ hổng!)
-  │
-  └─ Request 2: GET /security/cors/secure-data
-      ├─ Origin: http://attacker.com
-      └─ Response: 403 Forbidden ✅ (Bảo vệ)
-```
+![alt text](image-3.png)
+![alt text](image-4.png)
 
 ### Ảnh 3: CORS Header Comparison
 
-```
 Vulnerable Endpoint:
+![alt text](image-5.png)
+
 ┌─────────────────────────────────────┐
 │ Response Headers:                   │
 │ ❌ Access-Control-Allow-Origin: *   │ ← Cho phép TẤT CẢ
@@ -390,6 +323,7 @@ Vulnerable Endpoint:
 └─────────────────────────────────────┘
 
 Secure Endpoint:
+![alt text](image-6.png)
 ┌─────────────────────────────────────┐
 │ Response Headers:                   │
 │ ✅ Access-Control-Allow-Origin:     │
@@ -574,17 +508,3 @@ Dự án có thêm các tài liệu chi tiết:
 - ✅ Security testing & verification
 
 ---
-
-## 📞 Support & Questions
-
-Nếu có câu hỏi về dự án, tham khảo:
-1. **CODE_EXPLANATION.md** - Giải thích code
-2. **BEGINNER_GUIDE.md** - Khái niệm cơ bản
-3. **Tài liệu bên trong comments** - Chi tiết hơn
-
----
-
-**Phiên bản:** 1.0.0  
-**Ngày cập nhật:** December 9, 2025  
-**Branch:** production  
-**Status:** ✅ Production Ready
